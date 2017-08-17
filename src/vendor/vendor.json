@@ -1,0 +1,43 @@
+{
+	"comment": "",
+	"ignore": "test",
+	"package": [
+		{
+			"checksumSHA1": "pPH/BoINXxzYDObljpsGZbysMrw=",
+			"path": "github.com/BurntSushi/toml",
+			"revision": "b26d9c308763d68093482582cea63d69be07a0f0",
+			"revisionTime": "2017-03-28T06:15:53Z"
+		},
+		{
+			"checksumSHA1": "m+iiamnbukzE8kFPfBche6D0FmQ=",
+			"path": "github.com/Sirupsen/logrus",
+			"revision": "5b60b3d3ee017ed00bcd0225fcca7acab767844b",
+			"revisionTime": "2017-05-04T07:10:19Z"
+		},
+		{
+			"checksumSHA1": "g/V4qrXjUGG9B+e3hB+4NAYJ5Gs=",
+			"path": "github.com/gorilla/context",
+			"revision": "08b5f424b9271eedf6f9f0ce86cb9396ed337a42",
+			"revisionTime": "2016-08-17T18:46:32Z"
+		},
+		{
+			"checksumSHA1": "zmCk+lgIeiOf0Ng9aFP9aFy8ksE=",
+			"path": "github.com/gorilla/mux",
+			"revision": "4c1c3952b7d9d0a061a3fa7b36fd373ba0398ebc",
+			"revisionTime": "2017-04-27T04:12:50Z"
+		},
+		{
+			"checksumSHA1": "Z7RQY+vlVQZepyGvfS01Q4nH4m0=",
+			"path": "github.com/peterbourgon/g2s",
+			"revision": "d4e7ad98afea530d947adb4490aa062353856767",
+			"revisionTime": "2017-02-23T12:23:36Z"
+		},
+		{
+			"checksumSHA1": "oS0UZOGWVVsVciOQ8nZJ582mFF8=",
+			"path": "golang.org/x/sys/unix",
+			"revision": "9ccfe848b9db8435a24c424abbc07a921adf1df5",
+			"revisionTime": "2017-04-27T03:54:25Z"
+		}
+	],
+	"rootPath": "github.com/martensson/nixy"
+}
