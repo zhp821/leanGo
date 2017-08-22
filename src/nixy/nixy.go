@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 	"sync"
 	"time"
 
@@ -198,8 +199,10 @@ func main() {
 	configtoml := flag.String("f", "/etc/nixy/nixy.toml", "Path to config. (default nixy.toml)")
 	versionflag := flag.Bool("v", false, "prints current nixy version")
 	nginxGroup := flag.String("g", "", "nginx dicover service group")
+	marathon := flag.String("m", "", "marathon service url")
 	port := flag.String("p", "", "nixy status port")
 	flag.Parse()
+
 	fmt.Printf("group is %s\n", *nginxGroup)
 
 	if *versionflag {
@@ -223,6 +226,10 @@ func main() {
 	}
 	if nginxGroup != nil && *nginxGroup != "" {
 		config.Realm = *nginxGroup
+	}
+	if marathon != nil && *marathon != "" {
+		mhost := strings.Split(*marathon, ",")
+		config.Marathon = mhost
 	}
 	if port != nil && *port != "" {
 		config.Port = *port
