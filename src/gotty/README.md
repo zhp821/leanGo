@@ -1,6 +1,7 @@
 ###编译命令: gox -os="linux" -arch="amd64"
 ###The correct syntax in your case should be GOARM=6 GOARCH=arm GOOS=linux go build -o test test.go
 ###windows下面无法直接编译 会报错
+### 运行命令  gotty -p 8888  -w /bin/sh  centos 下运行 gotty -p 8888  -w /bin/bash 即可 
 # ![](https://raw.githubusercontent.com/yudai/gotty/master/resources/favicon.png) GoTTY - Share your terminal as a web application
 
 [![GitHub release](http://img.shields.io/github/release/yudai/gotty.svg?style=flat-square)][release]
