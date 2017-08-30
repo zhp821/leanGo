@@ -26,6 +26,8 @@ type Task struct {
 	StagedAt     string
 	StartedAt    string
 	Version      string
+	AppID        string
+	ID           string
 }
 
 // PortDefinitions struct
