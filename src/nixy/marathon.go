@@ -282,6 +282,7 @@ func syncApps(jsonapps *MarathonApps) bool {
 			newtask.Version = task.Version
 			newtask.AppID = task.AppID
 			newtask.ID = task.ID
+			fmt.Println(newtask.Ports)
 			newapp.Tasks = append(newapp.Tasks, newtask)
 		}
 		// Lets ignore apps if no tasks are available

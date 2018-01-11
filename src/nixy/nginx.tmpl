@@ -77,26 +77,37 @@ http {
 	{{ range $key, $value := .Servers}}
     server {                                                                                                     
         listen 80;               
-        server_name {{$key}} {{$key}}.*;{{range $k ,$v := $value}}{{$path := index $v.Labels "NGINX_PATH"}}   
+        server_name {{$key}} {{$key}}.*;
+		{{range $k ,$v := $value}}
+		{{$path := index $v.Labels "NGINX_PATH"}}   
         location  {{if eq $path ""}}/{{else}}{{$path}}{{end}} {                                                  
             proxy_set_header HOST $host;                       
             proxy_next_upstream error timeout invalid_header http_500 http_502 http_503 http_504;
             proxy_connect_timeout 30;                                                            
-            proxy_http_version 1.1;                                                              
+            proxy_http_version 1.1;
+			proxy_set_header   Cookie $http_cookie;                                                               
             proxy_set_header Upgrade $http_upgrade;                                              
             proxy_set_header Connection $connection_upgrade;                                     
             proxy_pass http://{{$v.NUM}}{{index $v.Hosts 0}};                                
         }
 		{{$tty := index $v.Labels "ENABLE_TTY"}} 
-        {{if eq $tty ""}}{{else}}{{- range $v.Tasks}}
-        location  /{{.ID}} {                                                                
+        {{if eq $tty ""}}{{else}}
+		{{- range $v.Tasks}}
+		{{ $length := len .Ports }}
+		{{if gt $length 1}}
+        location  /{{.ID}}/ {                                                                
+            proxy_set_header HOST $host;               
             proxy_connect_timeout 30;                                                                            
-            proxy_http_version 1.1;                                                                                                                                  
-            proxy_pass http://{{ .Host}}:{{ index .Ports 2}};                                                    
-        }     
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;                                              
+            proxy_set_header Connection $connection_upgrade;                                                                                                                                 
+            proxy_pass http://{{ .Host}}:{{ index .Ports 1}}/;                                                    
+        }  
+		{{end}}   
        {{end}}
       {{end}}                                                                                
         {{end}}
     }                                                                                            
     {{- end}}                                                                                    
-   include /etc/nginx/conf.d/*.conf;                                                             i}
+   include /etc/nginx/conf.d/*.conf; 
+   }

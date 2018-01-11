@@ -1,8 +1,10 @@
 package localcommand
 
 import (
+	"fmt"
 	"os"
 	"os/exec"
+	"strings"
 	"syscall"
 	"time"
 	"unsafe"
@@ -17,18 +19,19 @@ const (
 )
 
 type LocalCommand struct {
-	command string
-	argv    []string
-
+	command      string
+	argv         []string
+	info         string
 	closeSignal  syscall.Signal
 	closeTimeout time.Duration
-
-	cmd       *exec.Cmd
-	pty       *os.File
-	ptyClosed chan struct{}
+	cmd          *exec.Cmd
+	pty          *os.File
+	delcmd       []byte
+	ptyClosed    chan struct{}
 }
 
 func New(command string, argv []string, options ...Option) (*LocalCommand, error) {
+
 	cmd := exec.Command(command, argv...)
 
 	pty, err := pty.Start(cmd)
@@ -36,18 +39,19 @@ func New(command string, argv []string, options ...Option) (*LocalCommand, error
 		// todo close cmd?
 		return nil, errors.Wrapf(err, "failed to start command `%s`", command)
 	}
+	array := []byte{127, 127, 127, 127, 127, 127, 127, 127, 127, 127, 127, 127, 127, 127, 127, 127, 127, 127, 127, 127}
+
 	ptyClosed := make(chan struct{})
-
 	lcmd := &LocalCommand{
-		command: command,
-		argv:    argv,
-
+		command:      command,
+		argv:         argv,
+		info:         "",
 		closeSignal:  DefaultCloseSignal,
 		closeTimeout: DefaultCloseTimeout,
-
-		cmd:       cmd,
-		pty:       pty,
-		ptyClosed: ptyClosed,
+		cmd:          cmd,
+		pty:          pty,
+		delcmd:       array,
+		ptyClosed:    ptyClosed,
 	}
 
 	for _, option := range options {
@@ -69,10 +73,33 @@ func New(command string, argv []string, options ...Option) (*LocalCommand, error
 }
 
 func (lcmd *LocalCommand) Read(p []byte) (n int, err error) {
-	return lcmd.pty.Read(p)
+	n, e := lcmd.pty.Read(p)
+	return n, e
 }
 
 func (lcmd *LocalCommand) Write(p []byte) (n int, err error) {
+	if p[0] == 13 {
+		fmt.Printf("cmd: %s \n", lcmd.info)
+		text := strings.TrimSpace(lcmd.info)
+		lcmd.info = ""
+		if strings.Contains(text, "\\") || strings.Contains(text, "&") || strings.Contains(text, "|") || strings.Contains(text, ";") {
+			return lcmd.pty.Write(lcmd.delcmd)
+		}
+		if strings.HasPrefix(text, "pwd") || strings.HasPrefix(text, "exit") || strings.HasPrefix(text, "cd") || strings.HasPrefix(text, "ls") || strings.HasPrefix(text, "ps") || strings.HasPrefix(text, "less") || strings.HasPrefix(text, "tail") || strings.HasPrefix(text, "more") || strings.HasPrefix(text, "cat") {
+			return lcmd.pty.Write(p)
+		} else {
+			return lcmd.pty.Write(lcmd.delcmd)
+		}
+	}
+	if p[0] == 127 {
+		rs := []rune(lcmd.info)
+		length := len(rs)
+		if length > 0 {
+			lcmd.info = string(rs[0 : length-1])
+			return lcmd.pty.Write(p)
+		}
+	}
+	lcmd.info = lcmd.info + string(p[:])
 	return lcmd.pty.Write(p)
 }
 

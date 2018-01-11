@@ -26,6 +26,7 @@
                 var io = term.io.push();
 
                 io.onVTKeystroke = function(str) {
+					console.log("*******"+str)
                     ws.send("1" + str);
                 };
 
