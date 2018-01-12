@@ -4,9 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"math/rand"
 	"net/http"
 	"stock/pojo"
 	"stock/util"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -58,6 +60,57 @@ func realStockPrice() []pojo.Stock {
 
 }
 
+//获取分钟级别的k线数据 m5,m60,m30
+func getMinStocks(m string, stock pojo.Stock) {
+	r := strconv.FormatFloat(rand.Float64(), 'E', -1, 32)
+	url := "http://ifzq.gtimg.cn/appstock/app/kline/mkline?param=" + stock.Code + "," + m + ",,50&r=" + r
+	client := &http.Client{}
+
+	req, err := http.NewRequest("GET", url, strings.NewReader(""))
+	if err != nil {
+		// handle error
+	}
+	req.Header.Set("Content-Type", "application/json; charset=gbk")
+	resp, err := client.Do(req)
+
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+
+	if len(string(body)) < 500 {
+		return
+	}
+	str := strings.Replace(string(body), "m60", "min", -1)
+	str = strings.Replace(str, "m30", "min", -1)
+	str = strings.Replace(str, stock.Code, "list", -1)
+
+	var data map[string]interface{}
+	err = json.Unmarshal([]byte(str), &data)
+	if err != nil {
+		// handle error
+	}
+	data = (data["data"].(map[string]interface{}))
+	list := (data["list"].(map[string]interface{}))
+	values := (list["min"].([]interface{}))
+	var mstock []pojo.Stock
+	for _, value := range values {
+		vv, _ := value.([]interface{})
+		var tmp pojo.Stock
+		tmp.Time = vv[0].(string)
+		tmp.Open = util.ParseFloat(vv[1].(string), 32)
+		tmp.Close = util.ParseFloat(vv[2].(string), 32)
+		tmp.High = util.ParseFloat(vv[3].(string), 32)
+		tmp.Low = util.ParseFloat(vv[3].(string), 32)
+		mstock = append(mstock, tmp)
+	}
+	kdj := util.NewKdj(9, 3, 3)
+	k, d, j := kdj.Kdj(mstock)
+	lev := len(mstock)
+	stock.K = k[lev-1]
+	stock.D = d[lev-1]
+	stock.J = j[lev-1]
+}
+
 func getStockInfoFromQQ(stock pojo.Stock, ch chan int, num int, waitgroup sync.WaitGroup) {
 	waitgroup.Add(1)
 	url := "http://data.gtimg.cn/flashdata/hushen/latest/daily/" + stock.Code + ".js"
@@ -90,21 +143,18 @@ func getStockInfoFromQQ(stock pojo.Stock, ch chan int, num int, waitgroup sync.W
 		parr = append(parr, util.ParseFloat(oneday[2], 32))
 		varr = append(varr, util.ParseInt(oneday[5]))
 
-		//		one := stock
-		//		one.Code = stock.Code
-		//		one.Name = stock.Name
-		//		one.Time = "20" + oneday[0]
-		//		one.Open = util.ParseFloat(oneday[1], 32)
-		//		one.Close = util.ParseFloat(oneday[2], 32)
-		//		one.High = util.ParseFloat(oneday[3], 32)
-		//		one.Low = util.ParseFloat(oneday[4], 32)
-		//		one.Volume = util.ParseInt(oneday[5])
-		//		stock.Days = append(stock.Days, one)
+		one := stock
+		one.Code = stock.Code
+		one.Name = stock.Name
+		one.Time = "20" + oneday[0]
+		one.Open = util.ParseFloat(oneday[1], 32)
+		one.Close = util.ParseFloat(oneday[2], 32)
+		one.High = util.ParseFloat(oneday[3], 32)
+		one.Low = util.ParseFloat(oneday[4], 32)
+		one.Volume = util.ParseInt(oneday[5])
+		stock.Days = append(stock.Days, one)
 	}
 
-	//	le := len(parr)
-	//	parr = parr[0 : le-1]
-	//	varr = varr[0 : le-1]
 	lev := len(varr)
 	le := len(parr)
 
@@ -114,6 +164,13 @@ func getStockInfoFromQQ(stock pojo.Stock, ch chan int, num int, waitgroup sync.W
 		parr = append(parr, stock.Price)
 		le = len(parr)
 	}
+	//此处计算日的kdj
+	//	kdj := util.NewKdj(9, 3, 3)
+	//	k, d, j := kdj.Kdj(stock.Days)
+
+	//	stock.K = k[lev-1]
+	//	stock.D = d[lev-1]
+	//	stock.J = j[lev-1]
 
 	if le > 21 {
 
@@ -131,7 +188,9 @@ func getStockInfoFromQQ(stock pojo.Stock, ch chan int, num int, waitgroup sync.W
 	vavg := (stock.Vavg5 - stock.Vavg20) / stock.Vavg5
 
 	if le > 21 && avg > -0.01 && avg < 0.05 && vavg > 0.2 && stock.Price > stock.Avg20 && stock.Price > stock.Avg5 {
-		fmt.Printf("%d--name:%s, code:\n%s\n,price:%f,change:%f,avg5: %f ,avg20:%f,vavg5:%f,vavg20:%f \n", num, stock.Name, stock.Code, stock.Price, (stock.Price - parr[le-1]), stock.Avg5, stock.Avg20, stock.Vavg5, stock.Vavg20)
+		getMinStocks("m30", stock)
+		kd := stock.K - stock.D
+		fmt.Printf("%d--name:%s, code:%s,time:%s,price:%f,change:%f,avg5: %f ,avg20:%f,vavg5:%f,vavg20:%f,k:%f,d:%f,j:%f,kd:%f \n", num, stock.Name, stock.Code, stock.Days[le-1].Time, stock.Price, (stock.Price - parr[le-2]), stock.Avg5, stock.Avg20, stock.Vavg5, stock.Vavg20, stock.K, stock.D, stock.J, kd)
 	}
 
 	//fmt.Printf("%d--%s %d  end\n", num, stock.Name, len(stock.Days))

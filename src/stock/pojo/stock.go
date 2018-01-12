@@ -22,6 +22,7 @@ type Stock struct {
 	Low    float32
 	Volume int
 }
+
 type SinaStock struct {
 	Items []Stock
 	Total int32
