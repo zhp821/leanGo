@@ -66,16 +66,28 @@ var Tmpl = `
   <th>code</th>
   <th>Price</th>
   <th>kdj</th>
+  <th>des</th>
 </tr>
 {{range .stocks}}
 <tr>
   <td>{{.Name}}</td>
-  <td>{{.Code}}</td>
+  <td><span onclick="copyToClipboard('{{.Code}}')">{{.Code}}</span></td>
   <td>{{.Price}}</a></td>
   <td><a  href="{{.Url}}" target="_blank">{{.Avg5}}-{{.Avg20}}</a></td>
+  <td>{{.Des}}</td>
 </tr>
 {{end}}
 </table>
+<script>
+ function copyToClipboard(content) {
+      var aux = document.createElement("input");
+      aux.setAttribute("value", content);    
+      document.body.appendChild(aux);
+      aux.select();
+      document.execCommand("copy");
+      document.body.removeChild(aux);
+    }
+</script>
 </body>
 </html>
 `

@@ -118,7 +118,7 @@ func validkdj60() {
 	ok := 0
 	for _, stock := range stocks {
 		le := len(stock.Days)
-		if le < 21 || stock.Pe > 70 {
+		if le < 21 {
 			continue
 		}
 		des := ""
@@ -142,45 +142,61 @@ func validkdj60() {
 			if i < 1 {
 				continue
 			}
+			nowHour := util.Substr(min.Time, 8, len(min.Time))
 
+			if util.ParseInt(nowHour) < 1300 {
+				continue
+			}
 			kd := stock.K60[i] - stock.D60[i]
 			t1 := (stock.K60[i] - stock.K60[i-1]) / stock.K60[i-1]
 
-			if kd > -5 && kd < 15 && stock.K60[i] < 60 && t1 > 0 {
+			if kd > 0 && t1 > 0 {
 
 				nowDay := util.Substr(min.Time, 0, 8)
-				//nowHour := util.Substr(min.Time, 8, len(min.Time))
+
 				min30, o1 := m3[min.Time]
 				if !o1 || min30.Num < 1 || stock.K30[min30.Num] < stock.D30[min30.Num] || stock.K30[min30.Num] < stock.K30[min30.Num-1] {
 					continue
 				}
+
 				day, o := m[nowDay]
 
 				if o {
+
 					status := "faield"
 					numt := day.Num
 
+					if numt < 2 {
+						continue
+					}
+
 					if numt+1 < le {
+
 						num++
 						num1++
 
-						rate := (stock.Days[numt+1].High - min.Low) / min.Close
+						rate := (stock.Days[numt+1].High - min.Close) / min.Close
 
-						if rate > 0.001 {
+						if rate > 0.005 {
 							ok++
 							ok1++
 							des = des + "--" + min.Time
 							status = "success"
 						}
-						fmt.Printf("~~交叉点"+min.Time+"~~price%f~~"+day.Time+"~~第二天收盘%f,时间%s "+status, min.Price, stock.Days[numt+1].Close, stock.Days[numt+1].Time)
+						if num1 > 0 {
+							fmt.Printf("~~交叉点"+min.Time+"~~price%f~~"+day.Time+"~~第二天收盘%f,时间%s "+status, min.Price, stock.Days[numt+1].Close, stock.Days[numt+1].Time)
+
+						}
 
 					}
 
 				}
 			}
 		}
+		if num1 > 0 {
+			fmt.Println(stock.Name+"--"+stock.Code+"--"+des+",一共"+strconv.Itoa(num1), "成功"+strconv.Itoa(ok1))
 
-		fmt.Println(stock.Name+"--"+stock.Code+"--"+des+",一共"+strconv.Itoa(num1), "成功"+strconv.Itoa(ok1))
+		}
 	}
 	tmp2 := 100 * ok / num
 	fmt.Println("一共" + strconv.Itoa(num) + ",成功" + strconv.Itoa(ok) + ",成功率" + strconv.Itoa(tmp2) + "%")
