@@ -5,8 +5,9 @@ type Stock struct {
 	Code   string `json:"symbol"`
 	Name   string `json:"name"`
 	Time   string
-	Pe     float32 `json:"dtsyl"`
-	Price  float32 `json:"trade"`
+	Pe     float32 `json:"per"`
+	Price  float32 `json:"trade,string"`
+	Pb     float32 `json:"pb"`
 	Avg5   float32
 	Avg10  float32
 	Avg20  float32
@@ -26,13 +27,14 @@ type Stock struct {
 	D15    []float32
 	J15    []float32
 	Days   []Stock
-	Open   float32
-	Close  float32
-	High   float32
-	Low    float32
+	Open   float32 `json:"open,string"`
+	Close  float32 `json:"trade,string"`
+	High   float32 `json:"high,string"`
+	Low    float32 `json:"low,string"`
 	Volume int
 	M30    []Stock
 	M60    []Stock
+	M15    []Stock
 	Num    int
 	Max10  float32
 	Min10  float32
@@ -60,12 +62,13 @@ var Tmpl = `
 <html>
 <body>
 <h1>{{.total}} stocks</h1>
+<h2>{{.intro}}</h2>
 <table>
 <tr style='text-align: left'>
   <th>title</th>
   <th>code</th>
   <th>Price</th>
-  <th>kdj</th>
+  <th>Avg5-Avg20</th>
   <th>des</th>
 </tr>
 {{range .stocks}}

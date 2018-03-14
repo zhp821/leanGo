@@ -18,48 +18,76 @@ import (
 
 func realStockPrice() []pojo.Stock {
 
-	client := &http.Client{}
-
-	req, err := http.NewRequest("POST", "http://screener.finance.sina.com.cn/znxg/data/json.php/SSCore.doView?num=4000&sort=&asc=0&field0=stocktype&field1=sinahy&field2=diyu&value0=*&value1=*&value2=*&field3=trade&max3=752.13&min3=0&field4=open&max4=780.48&min4=0&field5=high&max5=788.61&min5=0&field6=low&max6=768&min6=0&field7=volume&max7=1105818634&min7=0&field8=dtsyl&max8=7379.21&min8=0", strings.NewReader(""))
-	if err != nil {
-		// handle error
-	}
-	req.Header.Set("Content-Type", "application/json; charset=gbk")
-	resp, err := client.Do(req)
-
-	defer resp.Body.Close()
-
-	body, err := ioutil.ReadAll(resp.Body)
-
-	html := string(body)
-	dec := mahonia.NewDecoder("GBK")
-
-	strr := dec.ConvertString(html)
-
-	strr = strings.Replace(strr, "(", "", -1)
-	strr = strings.Replace(strr, ")", "", -1)
-	strr = strings.Replace(strr, "items", "\"items\"", -1)
-	strr = strings.Replace(strr, "symbol", "\"symbol\"", -1)
-	strr = strings.Replace(strr, "name", "\"name\"", -1)
-	strr = strings.Replace(strr, "dtsyl", "\"dtsyl\"", -1)
-	strr = strings.Replace(strr, "trade", "\"trade\"", -1)
-	strr = strings.Replace(strr, "open", "\"open\"", -1)
-	strr = strings.Replace(strr, "high", "\"high\"", -1)
-	strr = strings.Replace(strr, "low", "\"low\"", -1)
-	strr = strings.Replace(strr, "volume", "\"volume\"", -1)
-	strr = strings.Replace(strr, ",total", ",\"total\"", -1)
-	strr = strings.Replace(strr, "page_total", "\"page_total\"", -1)
-	strr = strings.Replace(strr, ",page", ",\"page\"", -1)
-	strr = strings.Replace(strr, "num_per_page", "\"num_per_page\"", -1)
-
 	var data pojo.SinaStock
-	errr := json.Unmarshal([]byte(strr), &data)
-	if errr == nil {
-		return data.Items
-	} else {
-		fmt.Println(errr)
-		return nil
+
+	for i := 1; i < 100; i++ {
+
+		client := &http.Client{}
+
+		//req, err := http.NewRequest("POST", "http://screener.finance.sina.com.cn/znxg/data/json.php/SSCore.doView?num=4000&sort=&asc=0&field0=stocktype&field1=sinahy&field2=diyu&value0=*&value1=*&value2=*&field3=trade&max3=752.13&min3=0&field4=open&max4=780.48&min4=0&field5=high&max5=788.61&min5=0&field6=low&max6=768&min6=0&field7=volume&max7=1105818634&min7=0&field8=dtsyl&max8=7379.21&min8=0", strings.NewReader(""))
+		req, err := http.NewRequest("POST", "http://vip.stock.finance.sina.com.cn/quotes_service/api/json_v2.php/Market_Center.getHQNodeData?page="+strconv.Itoa(i)+"&num=4000&sort=changepercent&asc=0&node=hs_a&symbol=&_s_r_a=page", strings.NewReader(""))
+		if err != nil {
+			// handle error
+		}
+		req.Header.Set("Content-Type", "application/json; charset=gbk")
+		resp, err := client.Do(req)
+
+		defer resp.Body.Close()
+
+		body, err := ioutil.ReadAll(resp.Body)
+
+		html := string(body)
+		dec := mahonia.NewDecoder("GBK")
+
+		strr := dec.ConvertString(html)
+		fmt.Printf(strconv.Itoa(i) + " ")
+		if len(strr) < 500 {
+			break
+		}
+
+		//	strr = strings.Replace(strr, "(", "", -1)
+		//	strr = strings.Replace(strr, ")", "", -1)
+		//strr = strings.Replace(strr, "items", "\"items\"", -1)
+		strr = strings.Replace(strr, "symbol", "\"symbol\"", -1)
+		strr = strings.Replace(strr, "name", "\"name\"", -1)
+		strr = strings.Replace(strr, "code", "\"code\"", -1)
+		strr = strings.Replace(strr, "pricechange", "\"pricechange\"", -1)
+		strr = strings.Replace(strr, "changepercent", "\"changepercent\"", -1)
+		strr = strings.Replace(strr, "sell", "\"sell\"", -1)
+		strr = strings.Replace(strr, "buy", "\"buy\"", -1)
+		strr = strings.Replace(strr, "settlement", "\"settlement\"", -1)
+		strr = strings.Replace(strr, "amount", "\"amount\"", -1)
+		strr = strings.Replace(strr, "ticktime", "\"ticktime\"", -1)
+		strr = strings.Replace(strr, "per:", "\"per\":", -1)
+		strr = strings.Replace(strr, "mktcap", "\"mktcap\"", -1)
+		strr = strings.Replace(strr, "nmc", "\"nmc\"", -1)
+		strr = strings.Replace(strr, "turnoverratio", "\"turnoverratio\"", -1)
+		strr = strings.Replace(strr, "pb:", "\"pb\":", -1)
+
+		strr = strings.Replace(strr, "dtsyl", "\"dtsyl\"", -1)
+		strr = strings.Replace(strr, "trade", "\"trade\"", -1)
+		strr = strings.Replace(strr, "open", "\"open\"", -1)
+		strr = strings.Replace(strr, "high", "\"high\"", -1)
+		strr = strings.Replace(strr, "low", "\"low\"", -1)
+		strr = strings.Replace(strr, "volume", "\"volume\"", -1)
+		strr = strings.Replace(strr, ",total", ",\"total\"", -1)
+		strr = strings.Replace(strr, "page_total", "\"page_total\"", -1)
+		strr = strings.Replace(strr, ",page", ",\"page\"", -1)
+		strr = strings.Replace(strr, "num_per_page", "\"num_per_page\"", -1)
+
+		//fmt.Println(strr)
+
+		var stocks []pojo.Stock
+		errr := json.Unmarshal([]byte(strr), &stocks)
+
+		data.Items = append(data.Items, stocks...)
+
+		if errr != nil {
+			return data.Items
+		}
+
 	}
+	return data.Items
 
 }
 
@@ -115,6 +143,9 @@ func getMinStocks(m string, stock *pojo.Stock) (k, d, j, rsv []float32) {
 	}
 	if m == "m30" {
 		stock.M30 = mstock
+	}
+	if m == "m15" {
+		stock.M15 = mstock
 	}
 
 	return kdj.Kdj(mstock)
